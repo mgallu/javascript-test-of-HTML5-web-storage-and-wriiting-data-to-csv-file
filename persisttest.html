@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<html lang="en-US">
+<head>
+<meta charset="UTF-8">
+<!-- 
+File Name: persistest.html
+Version: 1.0
+Author: Mike Gallu
+Release Notes: 
+			V1.0  First release of test code
+			
+Description:This test program demonstrates 3 pieces of functionality.  
+	1. A rudimentary method of determining browser type.  In test I detect if IE or Edge are being used and display mesg and exit if true.
+	2. I use localStorage in browser to store records and record count in memory, up to 50 (maxrec) using persistence method.  Records are in csv format
+	3. When 50 records are queued up, write the records to csv file and reset counter.
+	
+			-->
+
+
+<script language="javascript">
+var myWindow = window.open("", "_self");
+var BrowserName = window.navigator.userAgent; //gets the name of the browser 
+var msie = BrowserName.indexOf ( ".NET ");
+var msie2 = BrowserName.indexOf ( "Edge");
+var outputStr = " ";
+/* Hack way of determining type of browser */
+if (msie > 0) outputStr += " Unsupported Browser detected: Internet Explorer <p> Use Chrome or Firefox </p>";
+if (msie2 >0) outputStr += " Unsupported Browser detected: Microsoft Edge<p> Use Chrome or Firefox </p";
+if (outputStr) {
+	document.write ("<div>" + outputStr + "</div>");
+	setTimeout((function() {  
+    myWindow.close();
+		}), 4000);
+	}
+var data='Jonathan,A,Smith, Morgan,11,,,,,,9/27/2019,680 Tipton Rd,,Seattle, WA,70513,(707)123-4567,jsmith@aolo.com, no \n';
+var sfdata = [
+   ['First Name','Mid Initial', 'Last Name','Minor','Minor 1 Age','Minor-2','Minor 2 Age','Minor-3','Minor 3 Age','VIP','Date','Street Address'
+, 'Apt/Suite','City','State','Zip Code','Phone Number','Email','Add to mailing list?', '\n'],
+];
+var maxrec=50;
+
+function clickCounter() {
+  if (typeof(Storage) !== "undefined") {
+    if (localStorage.clickcount) {
+      localStorage.clickcount = Number(localStorage.clickcount)+1;
+	  // The total number of records of record size limited to maxrec which limits to 50 records with header
+	  if (localStorage.clickcount <= maxrec) {
+		localStorage.sfrecord +=  data;
+		} else {
+			// Limit reached, write data to csv file and reset counters
+			var filename = "";
+			var dte = new Date();/* get current date */
+			var mn = dte.getMonth() + 1	;    /*month returned starts at 0 */
+			var dy = dte.getDate();
+			var yr = dte.getFullYear();
+			filename =mn +=dy +=yr += "-sfexp.csv";  /* Build filename based on todays date */
+			sfdata=sfdata += localStorage.sfrecord;
+			localStorage.clickcount = 1;
+			localStorage.sfrecord=data;
+			/* Prepare csv file for download to */
+			var hiddenElement = document.createElement('a');
+			hiddenElement.href = 'data:text/csv;charset=utf-8,' + encodeURI(sfdata);
+			hiddenElement.target = '_blank';
+			hiddenElement.download = filename;
+			hiddenElement.click();
+			}
+	  
+	  
+    } else {
+      localStorage.clickcount = 1;
+	  localStorage.sfrecord=data;
+    }
+    document.getElementById("result").innerHTML = "Number of records added " + localStorage.clickcount + " to storage.";
+  } else {
+    document.getElementById("result").innerHTML = "Sorry, your browser does not support web storage...";
+  }
+}
+
+function removeCounter() {
+  if (typeof(Storage) !== "undefined") {
+    localStorage.removeItem("clickcount");
+	localStorage.removeItem("sfrecord");
+	localStorage.sfrecord=" ";
+	document.getElementById("result").innerHTML = "Number of records added " + localStorage.clickcount + " to storage.";
+  } else {
+    document.getElementById("result").innerHTML = "Sorry, your browser does not support web storage...";
+  }
+}
+
+function listCounter() {
+var i=0;
+  if (typeof(Storage) !== "undefined") {
+   if (localStorage.clickcount && localStorage.sfrecord) {
+      for(i = 0; i < localStorage.clickcount ;i++) {	
+	  document.getElementById("result").innerHTML = "Queued Data= " + localStorage.sfrecord ;
+	  }
+    } 
+	else {
+      localStorage.clickcount = 1;
+	  localStorage.sfrecord=data;
+      }
+	}
+}
+</script>
+</head>
+<body>
+
+<p><button onclick="clickCounter()" type="button">Add record</button></p>
+<p><button onclick="removeCounter()" type="button">Clear Records</button></p>
+<p><button onclick="listCounter()" type="button">List Queue</button></p>
+<div id="result"></div>
+<p>Click the Add record button to see the counter increase and add a record to storage.</p>
+<p>The counter resets to 1 when reaches 50 or greater.  thats because local storage limited to 50 records of sample </p>
+<p>Close the browser tab (or window), and try again, and the counter will continue to count (is not reset).</p>
+
+</body>
+</html>
